@@ -1,76 +1,68 @@
 package br.com.rafaelmoreira.testes.controller;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import br.com.rafaelmoreira.testes.service.PessoaService;
 
-import br.com.rafaelmoreira.testes.model.Pessoa;
-
-@WireMockTest(httpPort = 8080)
-@SpringBootTest
+@WebMvcTest(PessoaController.class)
+@ContextConfiguration(classes = PessoaControllerTest.TestConfig.class)
 public class PessoaControllerTest  {
 	
 	@Autowired
-	private static WireMockServer wireMockServer;
+	private WebApplicationContext webApplicationContext;
 	
-	private PessoaController pessoaController;
-	
-	@BeforeAll
-	public static void init() {
-        wireMockServer.start();
-	}
-	
-	@AfterAll
-	public static void tearDown() {
-		wireMockServer.stop();
-	}
-	
-	@Test
-	public void exampleTest() {
-	    /**
-	     * stubFor: cria mock do servidor
-	     * WireMock.post: informa o verbo HTTP e qual endereço
-	     * willReturn: especifica que haverá retorno conforme condições abaixo
-	     * WireMock.aResponse(): cria uma resposta HTTP
-	     * withStatus: qual código HTTP será retornado
-	     * withHeader: cabeçalho de resposta
-	     * withBody: corpo da resposta
-	     * 
-	     * Cria um mock para o servidor /pessoas usando POST e terá uma resposta HTTP 200 com cabeçalho
-	     * informando que o retorno será um JSON e cria um objeto de retorno
-	     * 
-	     */
-		try {
-		    stubFor(WireMock.get("/pessoas/1")
-		        .willReturn(WireMock.aResponse()
-		        	.withStatus(200)
-		            .withHeader("Content-Type", "application/json")
-		            .withBody("{ \"id\":1, \"nome\":\"Rafael\", \"email\":\"rafael@email.com.br\", \"idade\":34 }")));
-	
-		    ResponseEntity<Pessoa> pessoa = pessoaController.recuperaPessoa(1L);
-		    
-		    assertTrue(pessoa.hasBody());
-		    assertNotNull(pessoa.getBody().getId());
-		    assertEquals(1L, pessoa.getBody().getId());
-		    assertThat(pessoa.getStatusCode()).as("Wrong response status code").isEqualTo(200);
-		}catch(Exception e) {
-			fail(e.getMessage());
-		}
-	   
-	}
-	
+    @Autowired
+    private MockMvc mockMvc;
+    
+    @BeforeEach
+    public void setup() throws Exception {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.webApplicationContext).build();
+    }
+
+    @Test
+    public void yourControllerTest() throws Exception {
+//        mockMvc.perform(MockMvcRequestBuilders.get("/pessoas").param("id", "1"))
+//               .andExpect(MockMvcResultMatchers.status().isOk())
+//               .andExpect(MockMvcResultMatchers.content().json("{ \"id\":1, \"nome\":\"Rafael\", \"email\":\"rafael@email.com.br\", \"idade\":34 }"))
+//               .andReturn();
+    	MvcResult mvcResult = this.mockMvc.perform(get("/pessoas").param("1"))
+    				.andDo(print())
+    				.andExpect(MockMvcResultMatchers.status().isOk())
+    				.andExpect(MockMvcResultMatchers.content().json("{ \"id\":1, \"nome\":\"Rafael\", \"email\":\"rafael@email.com.br\", \"idade\":34 }"))
+    				.andReturn();
+
+                    //TODO corrigir cenário de teste
+    	
+    	Assertions.assertEquals("application/json;charset=UTF-8", mvcResult.getResponse().getContentType());
+    }
+    
+    @Configuration
+    @Import(PessoaController.class)
+    static class TestConfig {
+
+        // Configurações personalizadas aqui, se necessário
+
+        @Bean
+        public PessoaService pessoaService() {
+            // Configuração personalizada do serviço, se necessário
+            return new PessoaService();
+        }
+    }
+    
 }

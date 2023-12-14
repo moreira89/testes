@@ -29,7 +29,7 @@ public class PessoaController {
 	@PostMapping
 	public ResponseEntity<Pessoa> cadastrarPessoa(@RequestBody Pessoa pessoa) throws Exception{
 		Pessoa p = pessoaService.cadastrarPessoa(pessoa);
-		return ResponseEntity.ok(p);
+		return ResponseEntity.ok().body(p);
 	}
 	
 	
