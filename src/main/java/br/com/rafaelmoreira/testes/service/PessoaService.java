@@ -41,5 +41,9 @@ public class PessoaService {
 		return pessoaRepository.cadastrar(pessoa);
 		
 	}
+
+	public Pessoa recuperaPessoa(Long id) {
+		return pessoaRepository.findById(id);
+	}
 	
 }
